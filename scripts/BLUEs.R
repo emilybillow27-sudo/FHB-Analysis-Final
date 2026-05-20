@@ -1,6 +1,6 @@
 # Read in phenotypic data
-test <- read.csv("FHB_Project_Testing_Data.csv")
-train <- read.csv("FHB_Project_Training_Data.csv")
+test <- read.csv("data/FHB_Project_Testing_Data.csv")
+train <- read.csv("data/FHB_Project_Training_Data.csv")
 
 test_names <- test |>
   dplyr::distinct(ID, FullSampleName)
@@ -257,10 +257,8 @@ check_me_train <- blues_me_train |>
 library(VariantAnnotation)
 library(tidyverse)
 
-vcf_file <- "fhb_analysis_2026_production_final.vcf.gz"
-
 # Read VCF
-vcf <- readVcf(vcf_file, genome = "unknown")
+vcf <- readVcf("data/fhb_analysis_2026_production_final.vcf.gz", genome = "unknown")
 
 # Extract genotype (GT) matrix
 gt <- geno(vcf)$GT # character matrix like "0/0", "0/1", "1/1"
