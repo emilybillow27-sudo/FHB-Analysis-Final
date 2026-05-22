@@ -3,42 +3,56 @@ library(ggplot2)
 library(stringr)
 
 # =========================================================
+# 0. FIX GENOTYPE COLUMN NAME IN geno_mat
+# =========================================================
+# Use the first column of geno_mat as the genotype ID (you showed it's FullSampleName)
+geno_id_col <- colnames(geno_mat)[1]
+geno_mat <- geno_mat %>% dplyr::rename(genotype = dplyr::all_of(geno_id_col))
+
+# =========================================================
 # 1. STATE PROGRAM ASSIGNMENT
 # =========================================================
-
-program_lookup <- data.frame(genotype = geno_mat$genotype) %>%
-  mutate(program = case_when(
-    str_detect(genotype, "^CO") ~ "CO",
-    str_detect(genotype, "^KS") ~ "KS",
-    str_detect(genotype, "^MT") ~ "MT",
-    str_detect(genotype, "^NE") ~ "NE",
-    str_detect(genotype, "^OK") ~ "OK",
-    str_detect(genotype, "^SD") ~ "SD",
-    str_detect(genotype, "^TX") ~ "TX",
-    str_detect(genotype, "^VA") ~ "VA",
+program_lookup <- geno_mat %>%
+  dplyr::distinct(genotype) %>%
+  dplyr::mutate(program = dplyr::case_when(
+    stringr::str_detect(genotype, "^CO") ~ "CO",
+    stringr::str_detect(genotype, "^KS") ~ "KS",
+    stringr::str_detect(genotype, "^MT") ~ "MT",
+    stringr::str_detect(genotype, "^NE") ~ "NE",
+    stringr::str_detect(genotype, "^OK") ~ "OK",
+    stringr::str_detect(genotype, "^SD") ~ "SD",
+    stringr::str_detect(genotype, "^TX") ~ "TX",
+    stringr::str_detect(genotype, "^VA") ~ "VA",
     TRUE ~ "Other"
   ))
 
 # =========================================================
 # 2. TRAINING / TESTING SET ASSIGNMENT
 # =========================================================
-
-set_lookup <- bind_rows(
-  test %>% distinct(ID) %>% mutate(genotype = ID, set = "Testing") %>% select(genotype, set),
-  train %>% distinct(germplasmName) %>% mutate(genotype = germplasmName, set = "Training") %>% select(genotype, set)
-) %>% distinct()
+set_lookup <- dplyr::bind_rows(
+  test %>%
+    dplyr::distinct(ID) %>%
+    dplyr::rename(genotype = ID) %>%
+    dplyr::mutate(set = "Testing") %>%
+    dplyr::select(genotype, set),
+  
+  train %>%
+    dplyr::distinct(germplasmName) %>%
+    dplyr::rename(genotype = germplasmName) %>%
+    dplyr::mutate(set = "Training") %>%
+    dplyr::select(genotype, set)
+) %>%
+  dplyr::distinct()
 
 # =========================================================
 # 3. MERGE METADATA
 # =========================================================
-
 metadata_df <- program_lookup %>%
-  left_join(set_lookup, by = "genotype")
+  dplyr::left_join(set_lookup, by = "genotype")
 
 # =========================================================
 # 4. PCA
 # =========================================================
-
 geno_numeric <- geno_mat[, -1]
 pca <- prcomp(geno_numeric, scale. = TRUE)
 
@@ -51,84 +65,46 @@ pca_df <- data.frame(
   PC1 = pca$x[, 1],
   PC2 = pca$x[, 2]
 ) %>%
-  left_join(metadata_df, by = "genotype")
+  dplyr::left_join(metadata_df, by = "genotype")
 
 # =========================================================
-# 5. PCA PLOT WITH OKABE–ITO PALETTE
+# 5. PCA PLOT
 # =========================================================
-
-ggplot(pca_df, aes(
-  x = PC1,
-  y = PC2,
-  color = program,
-  shape = set
-)) +
+p_pca <- ggplot(pca_df, aes(PC1, PC2, color = program, shape = set)) +
   geom_point(size = 3, alpha = 0.9) +
   scale_shape_manual(values = c("Training" = 16, "Testing" = 17)) +
-  scale_color_manual(
-    values = c(
-      "CO" = "#56B4E9",   # sky blue
-      "KS" = "#E69F00",   # orange
-      "MT" = "#009E73",   # bluish green
-      "NE" = "#D55E00",   # vermilion
-      "OK" = "#CC79A7",   # reddish purple
-      "Other" = "#000000",# black
-      "SD" = "#F0E442",   # yellow
-      "TX" = "#999999",   # gray
-      "VA" = "#0072B2"    # blue
-    ),
-    breaks = c("CO", "KS", "MT", "NE", "OK", "Other", "SD", "TX", "VA")
-  ) +
+  scale_color_manual(values = c(
+    "CO"="#56B4E9","KS"="#E69F00","MT"="#009E73","NE"="#D55E00",
+    "OK"="#CC79A7","Other"="#000000","SD"="#F0E442","TX"="#999999","VA"="#0072B2"
+  )) +
   labs(
-    title = "PCA of Genotypes by Program (Color) and Set (Shape)",
+    title = "PCA of Genotypes by Program and Set",
     x = paste0("PC1 (", pc1_var, "%)"),
     y = paste0("PC2 (", pc2_var, "%)")
   ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    legend.position = "right",
-    plot.title = element_text(face = "bold")
-  )
+  theme_minimal(base_size = 14)
 
+ggsave("results/figures/PCA_plot.png", p_pca, width = 8, height = 6, dpi = 300)
 
-
-
-
-
-
-
-# ====== Compute eigenvalues, variance explained, cumulative variance ======
+# =========================================================
+# 6. SCREE PLOT
+# =========================================================
 eigs <- pca$sdev^2
 var_expl <- eigs / sum(eigs) * 100
 cum_var <- cumsum(var_expl)
 
-# ====== Create PC table (first 64 PCs) ======
-pc_table <- data.frame(
-  PC = paste0("PC", 1:64),
-  Eigenvalue = round(eigs[1:64], 3),
-  PercentVariance = round(var_expl[1:64], 2),
-  CumulativeVariance = round(cum_var[1:64], 2)
-)
-
-pc_table
-
-# ====== Scree plot for PCs 1–64 (NO x-axis labels) ======
-library(ggplot2)
-
 scree_df <- data.frame(
   PC = 1:length(eigs),
-  Variance = var_expl
-)
+  Variance = var_expl,
+  lower = pmax(var_expl - 0.1, 0),
+  upper = var_expl + 0.1
+) %>%
+  dplyr::filter(PC <= 64)   # <‑‑ THIS FIXES THE WARNINGS
 
-# Optional: small visual confidence band (±0.1%)
-scree_df$lower <- scree_df$Variance - 0.1
-scree_df$upper <- scree_df$Variance + 0.1
-
-p <- ggplot(scree_df, aes(x = PC, y = Variance)) +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.15, fill = "steelblue") +
+p_scree <- ggplot(scree_df, aes(PC, Variance)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "steelblue", alpha = 0.15) +
   geom_point(size = 2) +
   geom_line() +
-  scale_x_continuous(limits = c(1, 64)) +   # show full range, no labels
   labs(
     title = "Scree Plot of Principal Components",
     x = "Principal Component",
@@ -136,9 +112,9 @@ p <- ggplot(scree_df, aes(x = PC, y = Variance)) +
   ) +
   theme_minimal(base_size = 14) +
   theme(
-    axis.text.x = element_blank(),          # remove x-axis labels
-    axis.ticks.x = element_blank(),         # remove x-axis ticks
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
     plot.title = element_text(face = "bold")
   )
 
-print(p)
+ggsave("results/figures/PCA_scree_plot.png", p_scree, width = 8, height = 6, dpi = 300)

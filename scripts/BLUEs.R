@@ -171,7 +171,6 @@ check_train <- blues_se_train |>
   # Count number of times the germplasmName appears
   dplyr::count()
 
-
 # Across-environment means for training dataset
 train_me <- blues_se_train
 
@@ -257,8 +256,10 @@ check_me_train <- blues_me_train |>
 library(VariantAnnotation)
 library(tidyverse)
 
+vcf_file <- "data/fhb_analysis_2026_production_final.vcf.gz"
+
 # Read VCF
-vcf <- readVcf("data/fhb_analysis_2026_production_final.vcf.gz", genome = "unknown")
+vcf <- readVcf(vcf_file, genome = "unknown")
 
 # Extract genotype (GT) matrix
 gt <- geno(vcf)$GT # character matrix like "0/0", "0/1", "1/1"
