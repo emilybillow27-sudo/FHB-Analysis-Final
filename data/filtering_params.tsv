@@ -1,0 +1,14 @@
+parameter	value
+vcfin	/data/student_files/zjwinn/GBS-Runs/call_for_billow_emily_fhb_project_2_12_26/raw_VCF/fhb_analysis_2026_production.vcf.gz
+vcfout	/data/student_files/zjwinn/GBS-Runs/call_for_billow_emily_fhb_project_2_12_26/filt_VCF/fhb_analysis_2026_production_filt.vcf
+taxa_sub_list	NA
+taxa_max_miss	0.80
+taxa_max_het	0.30
+min_maf	0.05
+snp_max_miss	0.20
+snp_max_het	0.10
+snp_min_dep	0
+snp_max_dep	100
+min_bp_space	0
+remove_chromosome	UNKNOWN
+max_ld	NA

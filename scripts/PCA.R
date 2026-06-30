@@ -5,7 +5,7 @@ library(stringr)
 # =========================================================
 # 0. FIX GENOTYPE COLUMN NAME IN geno_mat
 # =========================================================
-# Use the first column of geno_mat as the genotype ID (you showed it's FullSampleName)
+# Use the first column of geno_mat as the genotype ID
 geno_id_col <- colnames(geno_mat)[1]
 geno_mat <- geno_mat %>% dplyr::rename(genotype = dplyr::all_of(geno_id_col))
 
@@ -99,7 +99,7 @@ scree_df <- data.frame(
   lower = pmax(var_expl - 0.1, 0),
   upper = var_expl + 0.1
 ) %>%
-  dplyr::filter(PC <= 64)   # <‑‑ THIS FIXES THE WARNINGS
+  dplyr::filter(PC <= 64)
 
 p_scree <- ggplot(scree_df, aes(PC, Variance)) +
   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "steelblue", alpha = 0.15) +

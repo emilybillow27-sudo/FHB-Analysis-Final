@@ -171,6 +171,7 @@ check_train <- blues_se_train |>
   # Count number of times the germplasmName appears
   dplyr::count()
 
+
 # Across-environment means for training dataset
 train_me <- blues_se_train
 
@@ -512,3 +513,66 @@ prediction_accuracy <- forward_eval %>%
   )
 
 prediction_accuracy
+
+
+library(dplyr)
+library(tidyr)
+library(rrBLUP)
+
+traits <- c("INC", "SEV", "DON")
+K <- 5
+
+cv_results <- list()
+
+for (t in traits) {
+  message("Running ", K, "-fold CV for trait: ", t)
+
+  # Extract phenotype for this trait
+  ph <- merged_data %>%
+    dplyr::filter(TRAIT == t) %>%
+    dplyr::select(FullSampleName, y) %>%
+    tidyr::drop_na()
+
+  # IDs in GRM
+  ids <- rownames(GRM)[rownames(GRM) %in% ph$FullSampleName]
+
+  # reorder phenotype to GRM
+  ph_t <- ph %>%
+    dplyr::filter(FullSampleName %in% ids) %>%
+    dplyr::arrange(match(FullSampleName, ids))
+
+  GRM_t <- GRM[ids, ids]
+
+  # create folds
+  set.seed(123)
+  folds <- sample(rep(1:K, length.out = nrow(ph_t)))
+
+  pred_vec <- rep(NA, nrow(ph_t))
+
+  for (k in 1:K) {
+    test_idx <- which(folds == k)
+    train_idx <- setdiff(seq_len(nrow(ph_t)), test_idx)
+
+    y_train <- ph_t$y
+    y_train[test_idx] <- NA # mask test fold
+
+    fit <- rrBLUP::mixed.solve(
+      y = y_train,
+      K = GRM_t,
+      X = matrix(1, nrow = nrow(ph_t), ncol = 1)
+    )
+
+    pred_vec[test_idx] <- fit$u[test_idx]
+  }
+
+  acc <- stats::cor(pred_vec, ph_t$y, use = "complete.obs")
+
+  cv_results[[t]] <- data.frame(
+    TRAIT = t,
+    accuracy = acc,
+    n = nrow(ph_t)
+  )
+}
+
+cv_summary <- dplyr::bind_rows(cv_results)
+cv_summary
