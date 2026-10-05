@@ -19,6 +19,8 @@ This research evaluates genomic prediction of Fusarium head blight resistance in
 
 ## Analysis
 
-The analysis includes phenotype adjustment, genomic relationship matrix construction, GBLUP prediction, cross-validation, heritability estimation, and population structure visualization. The repository is under active development; The current local working pipeline is `scripts/working_script_fixed.R`.
+The analysis includes phenotype adjustment, genomic relationship matrix construction, GBLUP prediction, cross-validation, heritability estimation, and population structure visualization. The repository is under active development. The main working pipeline is `scripts/working_script_fixed.R`.
 
 Run scripts from the repository root. R package requirements and input files are specified in the individual scripts.
+
+Large data and result files use Git LFS. Install Git LFS before cloning, then run `git lfs pull` to download those files.
