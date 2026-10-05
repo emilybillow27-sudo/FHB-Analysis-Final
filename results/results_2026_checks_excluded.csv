@@ -1,0 +1,13 @@
+"TRAIT","location","scenario","n","predictive_ability"
+"FDK","UNL","Historical training population; checks excluded",78,0.124977921583224
+"INC","UNL","Historical training population; checks excluded",78,-0.136995858696246
+"SEV","UNL","Historical training population; checks excluded",78,-0.286701310638062
+"FDK","UNL","Expanded training population; checks excluded",78,-0.0584494897370358
+"INC","UNL","Expanded training population; checks excluded",78,0.0864825159853458
+"SEV","UNL","Expanded training population; checks excluded",78,-0.00533019032639716
+"FDK","UIUC","Historical training population; checks excluded",78,0.0313876493410998
+"INC","UIUC","Historical training population; checks excluded",78,-0.0464862024043229
+"SEV","UIUC","Historical training population; checks excluded",78,-0.00673837053053888
+"FDK","UIUC","Expanded training population; checks excluded",78,0.178864442469906
+"INC","UIUC","Expanded training population; checks excluded",78,0.408903624665836
+"SEV","UIUC","Expanded training population; checks excluded",78,0.163493742599391
