@@ -53,11 +53,3 @@ rsconnect/
 .AppleDouble
 .LSOverride
 ._*
-# Local dependencies and generated pipeline outputs
-renv/library/
-renv/staging/
-renv/cache/
-results/pipeline/
-results/validation/
-renv/state/
-renv/sandbox/
