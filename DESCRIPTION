@@ -1,0 +1,14 @@
+Package: fhbanalysis
+Title: Genomic Prediction of Fusarium Head Blight Resistance
+Version: 0.1.0
+Authors@R: person("Emily", "Billow", role = c("aut", "cre"))
+Description: Research analysis for genomic prediction of FHB resistance in hard winter wheat.
+Imports:
+    dplyr,
+    tidyr,
+    sommer,
+    gaston,
+    ggplot2,
+    lme4,
+    e1071
+Encoding: UTF-8

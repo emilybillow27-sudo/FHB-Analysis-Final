@@ -1,26 +1,24 @@
 # Genomic Prediction of Fusarium Head Blight Resistance in Wheat
 
-Analysis code for Emily Billow’s master’s thesis in the Colorado State University Wheat Breeding Program.
+Emily Billow’s master’s thesis analysis in the Colorado State University Wheat Breeding Program. The study compares historical and expanded training populations for prediction of incidence, severity, Fusarium-damaged kernels, and DON in CSU wheat material evaluated in 2025 and 2026.
 
-This research evaluates genomic prediction of Fusarium head blight resistance in hard winter wheat using historical phenotypic and genomic data and CSU field evaluations from 2025 and 2026. It compares historical training data with an expanded training population incorporating eligible 2025 observations to predict performance in a withheld 2026 validation population.
+## Run the analysis
 
-## Traits
+Install Git LFS before cloning and run `git lfs pull` to retrieve data. Restore the recorded R dependencies with `renv::restore()`, then run:
 
-- Disease incidence (INC)
-- Disease severity (SEV)
-- Fusarium-damaged kernels (FDK)
-- Deoxynivalenol concentration (DON)
+```sh
+Rscript run_analysis.R --stage all
+```
 
-## Repository structure
+`config.R` defines inputs, traits, marker thresholds, random seed, and the default 100 repetitions of five-fold cross-validation. Individual stages can be run with `--stage prepare`, `prediction`, `cv`, `summaries`, or `figures`. A shorter validation run uses `--repetitions 2`; it is not a final analysis.
 
-- `scripts/` — R scripts for phenotypic analysis, genomic prediction, and visualization
-- `data/` — Analysis inputs
-- `results/` — Generated tables and figures
+The pipeline prepares harmonized phenotype estimates and marker data, constructs both training populations, evaluates forward and cross-validation predictions, and generates summaries and figures. All stages read explicit saved inputs rather than relying on an existing R session.
 
-## Analysis
+## Files and outputs
 
-The analysis includes phenotype adjustment, genomic relationship matrix construction, GBLUP prediction, cross-validation, heritability estimation, and population structure visualization. The repository is under active development. The main working pipeline is `scripts/working_script_fixed.R`.
+- `data/` — Phenotype and marker inputs
+- `scripts/` — Shared functions and preparation, prediction, summary, and figure modules
+- `results/pipeline/` — New analysis outputs, model diagnostics, and run manifests; generated locally
+- `results/` — Previously committed results retained for reference
 
-Run scripts from the repository root. R package requirements and input files are specified in the individual scripts.
-
-Large data and result files use Git LFS. Install Git LFS before cloning, then run `git lfs pull` to download those files.
+Use `--output path/to/results` for a separate run. Missing location-specific traits are skipped until measurements are available. Heritability tables flag singular fits; these require interpretation before reporting.
