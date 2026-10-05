@@ -6,6 +6,14 @@
 # historical, 2025, and 2026 populations and evaluates forward genomic
 # prediction using GBLUP.
 
+# Run from the project root (FHB Analysis Final).
+if (!file.exists("data/FHB_Project_Training_Data.csv")) {
+  stop("Set the working directory to the FHB Analysis Final project root.")
+}
+for (output_dir in c("results/intermediate", "results/tables", "results/figures")) {
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
 library(dplyr)
 library(tidyr)
 library(purrr)
@@ -138,7 +146,7 @@ blues_se_test <- dplyr::bind_rows(
 
 saveRDS(
   blues_se_test,
-  "results/blues_se_test.rds"
+  "results/intermediate/blues_se_test.rds"
 )
 
 # Estimate BLUEs for the historical training population
@@ -241,7 +249,7 @@ blues_se_train <- dplyr::bind_rows(
 
 saveRDS(
   blues_se_train,
-  "results/blues_se_train.rds"
+  "results/intermediate/blues_se_train.rds"
 )
 
 # Estimate precision-weighted historical genotype performance
@@ -380,7 +388,7 @@ blues_me_train <- dplyr::bind_rows(
 
 saveRDS(
   blues_me_train,
-  "results/blues_me_train.rds"
+  "results/intermediate/blues_me_train.rds"
 )
 
 # Read and prepare the genome-wide marker data
@@ -405,11 +413,15 @@ vcf <- gaston::as.matrix(
 
 # Calculate the genomic relationship matrix
 
-GRM <- sommer::A.mat(vcf)
+grm_inputs <- sommer::A.mat(vcf, return.imputed = TRUE)
+GRM <- grm_inputs$A
+geno_mat <- as.data.frame(grm_inputs$X, check.names = FALSE)
+geno_mat <- tibble::rownames_to_column(geno_mat, "FullSampleName")
+saveRDS(geno_mat, "results/intermediate/geno_mat.rds")
 
 saveRDS(
   GRM,
-  "results/GRM.rds"
+  "results/intermediate/GRM.rds"
 )
 
 # Harmonize phenotype identifiers with GRM identifiers
@@ -471,6 +483,9 @@ blues_me_train <- harmonize_marker_ids(
 blues_se_test <- harmonize_marker_ids(
   blues_se_test
 )
+
+saveRDS(blues_me_train, "results/intermediate/blues_me_train.rds")
+saveRDS(blues_se_test, "results/intermediate/blues_se_test.rds")
 
 # Forward prediction of the 2025 testing population using GBLUP
 
@@ -632,13 +647,13 @@ print(
 
 write.csv(
   forward_2025,
-  "results/forward_predictions_2025.csv",
+  "results/tables/forward_predictions_2025.csv",
   row.names = FALSE
 )
 
 write.csv(
   forward_2025_accuracy,
-  "results/forward_prediction_2025_accuracy.csv",
+  "results/tables/forward_prediction_2025_accuracy.csv",
   row.names = FALSE
 )
 
@@ -928,7 +943,7 @@ print(
 
 saveRDS(
   blues_se_2026,
-  "results/blues_se_2026.rds"
+  "results/intermediate/blues_se_2026.rds"
 )
 
 # Calculate precision-weighted multi-environment BLUEs for 2026
@@ -1090,19 +1105,19 @@ print(
 
 saveRDS(
   blues_me_2026_all,
-  "results/blues_me_2026_all.rds"
+  "results/intermediate/blues_me_2026_all.rds"
 )
 
 saveRDS(
   blues_me_2026,
-  "results/blues_me_2026_validation.rds"
+  "results/intermediate/blues_me_2026_validation.rds"
 )
 
 # Load the expanded training population calculated in the
 # expanded-training analysis
 
 blues_me_expanded <- readRDS(
-  "results/blues_me_expanded.rds"
+  "results/intermediate/blues_me_expanded.rds"
 )
 
 blues_me_expanded <- harmonize_marker_ids(
@@ -1334,18 +1349,18 @@ print(
 
 write.csv(
   predictions_2026,
-  "results/forward_predictions_2026.csv",
+  "results/tables/forward_predictions_2026.csv",
   row.names = FALSE
 )
 
 write.csv(
   results_2026,
-  "results/forward_prediction_2026_accuracy.csv",
+  "results/tables/forward_prediction_2026_accuracy.csv",
   row.names = FALSE
 )
 
 write.csv(
   results_2026_comparison,
-  "results/forward_prediction_2026_comparison.csv",
+  "results/tables/forward_prediction_2026_comparison.csv",
   row.names = FALSE
 )

@@ -3,6 +3,14 @@
 # Purpose: Evaluate GBLUP prediction ability within the historical FHB
 # training population using 100 repetitions of 5-fold cross-validation.
 
+# Run from the project root (FHB Analysis Final).
+if (!file.exists("data/FHB_Project_Training_Data.csv")) {
+  stop("Set the working directory to the FHB Analysis Final project root.")
+}
+for (output_dir in c("results/intermediate", "results/tables", "results/figures")) {
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
 library(dplyr)
 library(sommer)
 
@@ -14,8 +22,8 @@ n_folds <- 5
 set.seed(123)
 
 # Load finalized historical multi-environment BLUEs and genomic relationship matrix
-blues_me_train <- readRDS("results/blues_me_train.rds")
-GRM <- readRDS("results/GRM.rds")
+blues_me_train <- readRDS("results/intermediate/blues_me_train.rds")
+GRM <- readRDS("results/intermediate/GRM.rds")
 
 # Store out-of-fold predictions from each trait and repetition
 cv_prediction_list <- list()
@@ -212,19 +220,19 @@ print(cv_summary_hist)
 # Save genotype-level out-of-fold predictions
 saveRDS(
   cv_predictions_hist,
-  "results/historical_cv_predictions.rds"
+  "results/intermediate/historical_cv_predictions.rds"
 )
 
 # Save prediction ability for each repetition
 write.csv(
   cv_results_hist,
-  "results/historical_cv_results.csv",
+  "results/tables/historical_cv_results.csv",
   row.names = FALSE
 )
 
 # Save trait-level summary
 write.csv(
   cv_summary_hist,
-  "results/historical_cv_summary.csv",
+  "results/tables/historical_cv_summary.csv",
   row.names = FALSE
 )

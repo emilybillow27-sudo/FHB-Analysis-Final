@@ -1,6 +1,0 @@
-"Year","Location","Population","Plot records","Unique genotypes/entries","Traits","Analytical role"
-2025,"UIUC","Complete field population",472,268,"INC, SEV, FDK, DON","Phenotypic evaluation"
-2025,"UIUC","Forward-validation population",382,191,"INC, SEV, FDK, DON","Historical model forward validation"
-2026,"UIUC","Complete field population",160,86,"INC, SEV, FDK","Phenotypic evaluation"
-2026,"UNL","Complete field population",160,86,"INC, SEV, FDK","Phenotypic evaluation"
-2026,"UIUC + UNL","Primary validation population",240,60,"INC, SEV, FDK","Historical vs. expanded model forward validation"

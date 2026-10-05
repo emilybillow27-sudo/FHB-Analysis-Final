@@ -3,31 +3,24 @@
 # Purpose: Compare observed 2025 UIUC adjusted genotype means with
 # genomic estimated breeding values for INC, SEV, DON, and FDK
 
+# Run from the project root (FHB Analysis Final).
+if (!file.exists("data/FHB_Project_Training_Data.csv")) {
+  stop("Set the working directory to the FHB Analysis Final project root.")
+}
+for (output_dir in c("results/intermediate", "results/tables", "results/figures")) {
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
 library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(patchwork)
 
-# Run working_script_fixed.R before running this script.
-# Required objects:
-#   forward_2025
-#   blues_se_test
-#   blues_me_train
-
+# Read saved outputs from the main pipeline; no preloaded R objects are required.
+forward_2025 <- read.csv("results/tables/forward_predictions_2025.csv", stringsAsFactors = FALSE)
+blues_se_test <- readRDS("results/intermediate/blues_se_test.rds")
+blues_me_train <- readRDS("results/intermediate/blues_me_train.rds")
 traits <- c("INC", "SEV", "DON", "FDK")
-
-# Confirm that the required objects exist
-if (!exists("forward_2025")) {
-  stop("forward_2025 was not found. Run the main genomic-prediction script first.")
-}
-
-if (!exists("blues_se_test")) {
-  stop("blues_se_test was not found. Run the main genomic-prediction script first.")
-}
-
-if (!exists("blues_me_train")) {
-  stop("blues_me_train was not found. Run the main genomic-prediction script first.")
-}
 
 # Confirm required columns
 required_prediction_columns <- c(

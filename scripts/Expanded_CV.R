@@ -6,6 +6,14 @@
 # historical + 2025 training population and evaluates genomic
 # prediction ability using repeated five-fold cross-validation.
 
+# Run from the project root (FHB Analysis Final).
+if (!file.exists("data/FHB_Project_Training_Data.csv")) {
+  stop("Set the working directory to the FHB Analysis Final project root.")
+}
+for (output_dir in c("results/intermediate", "results/tables", "results/figures")) {
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
 library(dplyr)
 library(tidyr)
 library(sommer)
@@ -20,15 +28,15 @@ set.seed(123)
 # Load data
 
 blues_se_train <- readRDS(
-  "results/blues_se_train.rds"
+  "results/intermediate/blues_se_train.rds"
 )
 
 blues_se_test <- readRDS(
-  "results/blues_se_test.rds"
+  "results/intermediate/blues_se_test.rds"
 )
 
 GRM <- readRDS(
-  "results/GRM.rds"
+  "results/intermediate/GRM.rds"
 )
 
 unl_2026_raw <- read.csv(
@@ -239,7 +247,7 @@ stopifnot(
 
 saveRDS(
   blues_me_expanded,
-  "results/blues_me_expanded.rds"
+  "results/intermediate/blues_me_expanded.rds"
 )
 
 # Cross-validation of expanded training population
@@ -428,17 +436,17 @@ print(cv_fold_sizes_expanded)
 
 saveRDS(
   cv_predictions_expanded,
-  "results/cv_predictions_expanded.rds"
+  "results/intermediate/cv_predictions_expanded.rds"
 )
 
 write.csv(
   cv_results_expanded,
-  "results/cv_results_expanded.csv",
+  "results/tables/cv_results_expanded.csv",
   row.names = FALSE
 )
 
 write.csv(
   cv_summary_expanded,
-  "results/cv_summary_expanded.csv",
+  "results/tables/cv_summary_expanded.csv",
   row.names = FALSE
 )

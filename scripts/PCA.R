@@ -1,6 +1,22 @@
+# Run from the project root (FHB Analysis Final).
+if (!file.exists("data/FHB_Project_Training_Data.csv")) {
+  stop("Set the working directory to the FHB Analysis Final project root.")
+}
+for (output_dir in c("results/intermediate", "results/tables", "results/figures")) {
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
 library(dplyr)
 library(ggplot2)
 library(stringr)
+
+# The main pipeline saves the marker matrix used for its GRM.
+if (!file.exists("results/intermediate/geno_mat.rds")) {
+  stop("Missing geno_mat.rds. Run the marker preparation section of working_script_fixed.R first.")
+}
+geno_mat <- readRDS("results/intermediate/geno_mat.rds")
+train <- readRDS("results/intermediate/blues_me_train.rds")
+test <- readRDS("results/intermediate/blues_se_test.rds")
 
 # =========================================================
 # 0. FIX GENOTYPE COLUMN NAME IN geno_mat
@@ -30,30 +46,29 @@ program_lookup <- geno_mat %>%
 # 2. TRAINING / TESTING SET ASSIGNMENT
 # =========================================================
 set_lookup <- dplyr::bind_rows(
-  test %>%
-    dplyr::distinct(ID) %>%
-    dplyr::rename(genotype = ID) %>%
-    dplyr::mutate(set = "Testing") %>%
-    dplyr::select(genotype, set),
-  
-  train %>%
-    dplyr::distinct(germplasmName) %>%
-    dplyr::rename(genotype = germplasmName) %>%
-    dplyr::mutate(set = "Training") %>%
-    dplyr::select(genotype, set)
+  test %>% dplyr::filter(!is.na(FullSampleName)) %>%
+    dplyr::distinct(FullSampleName) %>%
+    dplyr::transmute(genotype = FullSampleName, set = "Testing"),
+  train %>% dplyr::filter(!is.na(FullSampleName)) %>%
+    dplyr::distinct(FullSampleName) %>%
+    dplyr::transmute(genotype = FullSampleName, set = "Training")
 ) %>%
-  dplyr::distinct()
+  dplyr::group_by(genotype) %>%
+  dplyr::summarise(set = paste(sort(unique(set)), collapse = " and "), .groups = "drop")
 
 # =========================================================
 # 3. MERGE METADATA
 # =========================================================
 metadata_df <- program_lookup %>%
-  dplyr::left_join(set_lookup, by = "genotype")
+  dplyr::left_join(set_lookup, by = "genotype") %>%
+  dplyr::mutate(set = dplyr::coalesce(set, "Other genotyped"))
 
 # =========================================================
 # 4. PCA
 # =========================================================
-geno_numeric <- geno_mat[, -1]
+geno_numeric <- as.matrix(geno_mat[, -1, drop = FALSE])
+if (anyNA(geno_numeric)) stop("PCA marker input contains missing values.")
+geno_numeric <- geno_numeric[, apply(geno_numeric, 2, sd) > 0, drop = FALSE]
 pca <- prcomp(geno_numeric, scale. = TRUE)
 
 var_expl <- (pca$sdev^2) / sum(pca$sdev^2)
@@ -72,7 +87,7 @@ pca_df <- data.frame(
 # =========================================================
 p_pca <- ggplot(pca_df, aes(PC1, PC2, color = program, shape = set)) +
   geom_point(size = 3, alpha = 0.9) +
-  scale_shape_manual(values = c("Training" = 16, "Testing" = 17)) +
+  scale_shape_manual(values = c("Training" = 16, "Testing" = 17, "Testing and Training" = 15, "Other genotyped" = 3)) +
   scale_color_manual(values = c(
     "CO"="#56B4E9","KS"="#E69F00","MT"="#009E73","NE"="#D55E00",
     "OK"="#CC79A7","Other"="#000000","SD"="#F0E442","TX"="#999999","VA"="#0072B2"
@@ -118,3 +133,6 @@ p_scree <- ggplot(scree_df, aes(PC, Variance)) +
   )
 
 ggsave("results/figures/PCA_scree_plot.png", p_scree, width = 8, height = 6, dpi = 300)
+
+write.csv(pca_df, "results/tables/PCA_scores.csv", row.names = FALSE)
+write.csv(scree_df, "results/tables/PCA_variance_explained.csv", row.names = FALSE)

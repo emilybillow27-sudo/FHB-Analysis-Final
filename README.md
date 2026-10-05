@@ -1,26 +1,22 @@
 # Genomic Prediction of Fusarium Head Blight Resistance in Wheat
 
-Analysis code for Emily Billow’s master’s thesis in the Colorado State University Wheat Breeding Program.
+Emily Billow’s master’s thesis analysis in the Colorado State University Wheat Breeding Program. The study evaluates historical and expanded training populations for prediction of incidence, severity, Fusarium-damaged kernels, and DON in CSU wheat material evaluated in 2025 and 2026.
 
-This research evaluates genomic prediction of Fusarium head blight resistance in hard winter wheat using historical phenotypic and genomic data and CSU field evaluations from 2025 and 2026. It compares historical training data with an expanded training population incorporating eligible 2025 observations to predict performance in a withheld 2026 validation population.
+## Scripts
 
-## Traits
+- `scripts/working_script_fixed.R` — Main pipeline: phenotype estimates, GRM, and forward prediction
+- `scripts/Historical_CV.R` — Historical training population cross-validation
+- `scripts/Expanded_CV.R` — Expanded training estimates and cross-validation
+- `scripts/PCA.R` — Population structure and scree plots
+- `scripts/scatterplots.R` — Observed versus predicted plots
 
-- Disease incidence (INC)
-- Disease severity (SEV)
-- Fusarium-damaged kernels (FDK)
-- Deoxynivalenol concentration (DON)
+Run scripts from the project root. The main pipeline reads the saved expanded-training estimates; refresh those with `Expanded_CV.R` after updating historical or 2025 inputs, then rerun the main pipeline for the corresponding 2026 comparison. CV scripts retain 100 repetitions of five-fold validation. PCA and scatterplots read saved inputs.
 
-## Repository structure
+## Workspace
 
-- `scripts/` — R scripts for phenotypic analysis, genomic prediction, and visualization
-- `data/` — Analysis inputs
-- `results/` — Generated tables and figures
+- `data/` — Original analysis inputs
+- `results/intermediate/` — Saved phenotype estimates, marker inputs, GRM, and CV prediction objects
+- `results/tables/` — Prediction summaries, PCA exports, and retained research summary tables
+- `results/figures/` — PCA and prediction figures from the active scripts
 
-## Analysis
-
-The analysis includes phenotype adjustment, genomic relationship matrix construction, GBLUP prediction, cross-validation, heritability estimation, and population structure visualization. The repository is under active development. The main working pipeline is `scripts/working_script_fixed.R`.
-
-Run scripts from the repository root. R package requirements and input files are specified in the individual scripts.
-
-Large data and result files use Git LFS. Install Git LFS before cloning, then run `git lfs pull` to download those files.
+Superseded scripts and alternate outputs are preserved locally under `archive/2026-10-05-cleanup/` and remain recoverable in Git history. Existing result files were organized without recalculating the statistical analyses. Large binary inputs and saved R objects use Git LFS.

@@ -53,3 +53,6 @@ rsconnect/
 .AppleDouble
 .LSOverride
 ._*
+# Recoverable local archives and unused local dependency files
+/archive/
+/renv/
