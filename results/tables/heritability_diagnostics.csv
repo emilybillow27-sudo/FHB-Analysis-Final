@@ -1,0 +1,34 @@
+"Trait","Population","Location","singular_fit","convergence_warning","model_notes"
+"INC","Historical training","Multiple environments",TRUE,"boundary (singular) fit: see help('isSingular')","boundary (singular) fit: see help('isSingular')
+"
+"SEV","Historical training","Multiple environments",TRUE,"boundary (singular) fit: see help('isSingular')","boundary (singular) fit: see help('isSingular')
+"
+"DON","Historical training","Multiple environments",FALSE,"",""
+"FDK","Historical training","Multiple environments",FALSE,"Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?","Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?"
+"INC","2025 testing Elite","UIUC",FALSE,"",""
+"SEV","2025 testing Elite","UIUC",TRUE,"boundary (singular) fit: see help('isSingular')","boundary (singular) fit: see help('isSingular')
+"
+"DON","2025 testing Elite","UIUC",TRUE,"boundary (singular) fit: see help('isSingular')","boundary (singular) fit: see help('isSingular')
+"
+"FDK","2025 testing Elite","UIUC",FALSE,"",""
+"INC","2025 testing WSS AYN","UIUC",FALSE,"",""
+"SEV","2025 testing WSS AYN","UIUC",TRUE,"boundary (singular) fit: see help('isSingular')","boundary (singular) fit: see help('isSingular')
+"
+"DON","2025 testing WSS AYN","UIUC",FALSE,"",""
+"FDK","2025 testing WSS AYN","UIUC",FALSE,"",""
+"INC","2026 testing","UNL",TRUE,"boundary (singular) fit: see help('isSingular')","boundary (singular) fit: see help('isSingular')
+"
+"SEV","2026 testing","UNL",TRUE,"boundary (singular) fit: see help('isSingular')","boundary (singular) fit: see help('isSingular')
+"
+"DON","2026 testing","UNL",FALSE,"",""
+"FDK","2026 testing","UNL",TRUE,"boundary (singular) fit: see help('isSingular')","boundary (singular) fit: see help('isSingular')
+"
+"INC","2026 testing","UIUC",FALSE,"",""
+"SEV","2026 testing","UIUC",TRUE,"boundary (singular) fit: see help('isSingular')","boundary (singular) fit: see help('isSingular')
+"
+"FDK","2026 testing","UIUC",FALSE,"",""
+"INC","2026 testing","SDSU",TRUE,"boundary (singular) fit: see help('isSingular')","boundary (singular) fit: see help('isSingular')
+"
+"SEV","2026 testing","SDSU",FALSE,"",""
