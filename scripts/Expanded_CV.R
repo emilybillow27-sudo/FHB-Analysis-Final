@@ -2,8 +2,8 @@
 # Emily Billow
 # September 2026
 
-# This script calculates multi-environment BLUEs for the expanded
-# historical + 2025 training population and evaluates genomic
+# This script loads expanded historical + 2025 multi-environment
+# BLUEs prepared by working_script_fixed.R and evaluates genomic
 # prediction ability using repeated five-fold cross-validation.
 
 # Run from the project root (FHB Analysis Final).
@@ -25,230 +25,18 @@ n_folds <- 5
 
 set.seed(123)
 
-# Load data
+# Load expanded ME BLUEs prepared by working_script_fixed.R
+# This script evaluates CV only; it does not reconstruct training phenotypes
 
-blues_se_train <- readRDS(
-  "results/intermediate/blues_se_train.rds"
-)
-
-blues_se_test <- readRDS(
-  "results/intermediate/blues_se_test.rds"
-)
-
-GRM <- readRDS(
-  "results/intermediate/GRM.rds"
-)
-
-unl_2026_raw <- read.csv(
-  "data/FHB_Project_Testing_Data_UNL_2026.csv",
-  stringsAsFactors = FALSE
-)
-
-# Identify 2026 validation genotypes
-
-selected_2026 <- unl_2026_raw %>%
-  dplyr::filter(CATEGORY == "Duplicate") %>%
-  dplyr::distinct(ID) %>%
-  dplyr::pull(ID)
-
-stopifnot(length(selected_2026) == 60)
-
-print(length(selected_2026))
-
-# Prepare historical single-environment BLUEs
-
-hist_se_expanded <- blues_se_train %>%
-  dplyr::filter(
-    !germplasmName %in% selected_2026
-  ) %>%
-  dplyr::transmute(
-    germplasmName = germplasmName,
-    FullSampleName = FullSampleName,
-    TRAIT = TRAIT,
-    environment = studyName,
-    predicted.value = predicted.value,
-    std.error = std.error,
-    adjusted = adjusted,
-    source = "Historical"
-  )
-
-# Prepare 2025 single-environment BLUEs
-
-test_2025_se_expanded <- blues_se_test %>%
-  dplyr::filter(
-    !ID %in% selected_2026
-  ) %>%
-  dplyr::transmute(
-    germplasmName = ID,
-    FullSampleName = FullSampleName,
-    TRAIT = TRAIT,
-    environment = SUB_NURNAME,
-    predicted.value = predicted.value,
-    std.error = std.error,
-    adjusted = adjusted,
-    source = "2025"
-  )
-
-# Combine historical and 2025 single-environment BLUEs
-
-blues_se_expanded <- dplyr::bind_rows(
-  hist_se_expanded,
-  test_2025_se_expanded
-)
-
-# Confirm 2026 validation genotypes are excluded
-
-selected_remaining <- intersect(
-  selected_2026,
-  unique(blues_se_expanded$germplasmName)
-)
-
-stopifnot(length(selected_remaining) == 0)
-
-# Summarize expanded training population
-
-expanded_population_summary <- blues_se_expanded %>%
-  dplyr::group_by(source, TRAIT) %>%
-  dplyr::summarise(
-    N_RECORDS = dplyr::n(),
-    N_GENOTYPES = dplyr::n_distinct(germplasmName),
-    N_ENVIRONMENTS = dplyr::n_distinct(environment),
-    .groups = "drop"
-  )
-
-print(expanded_population_summary)
-
-# Calculate precision-weighted multi-environment BLUEs
-
-expanded_blue_list <- list()
-
-for (trait in traits) {
-  
-  dat_trait <- blues_se_expanded %>%
-    dplyr::filter(
-      TRAIT == trait,
-      !is.na(predicted.value),
-      !is.na(germplasmName),
-      !is.na(FullSampleName)
-    )
-  
-  genotype_names <- dat_trait %>%
-    dplyr::select(
-      germplasmName,
-      FullSampleName
-    ) %>%
-    dplyr::distinct()
-  
-  dat_model <- dat_trait %>%
-    dplyr::select(
-      germplasmName,
-      environment,
-      predicted.value,
-      std.error
-    ) %>%
-    dplyr::rename(
-      y = predicted.value,
-      se = std.error
-    )
-  
-  dat_model$germplasmName <- factor(
-    dat_model$germplasmName
-  )
-  
-  dat_model$environment <- factor(
-    dat_model$environment
-  )
-  
-  if (all(is.na(dat_model$se))) {
-    
-    mod <- sommer::mmes(
-      fixed = y ~ germplasmName,
-      random = ~ environment,
-      rcov = ~ units,
-      data = dat_model
-    )
-    
-  } else {
-    
-    mean_se <- mean(
-      dat_model$se,
-      na.rm = TRUE
-    )
-    
-    dat_model <- dat_model %>%
-      dplyr::mutate(
-        se_weight = ifelse(
-          is.na(se),
-          mean_se,
-          se
-        )
-      )
-    
-    W <- diag(
-      1 / dat_model$se_weight^2
-    )
-    
-    mod <- sommer::mmes(
-      fixed = y ~ germplasmName,
-      random = ~ environment,
-      rcov = ~ units,
-      W = W,
-      data = dat_model
-    )
-  }
-  
-  pred <- predict.mmes(
-    mod,
-    D = "germplasmName"
-  )$pvals %>%
-    as.data.frame()
-  
-  pred <- pred %>%
-    dplyr::transmute(
-      germplasmName = as.character(germplasmName),
-      predicted.value = predicted.value,
-      std.error = std.error
-    ) %>%
-    dplyr::left_join(
-      genotype_names,
-      by = "germplasmName"
-    ) %>%
-    dplyr::mutate(
-      TRAIT = trait
-    )
-  
-  expanded_blue_list[[trait]] <- pred
+expanded_file <- "results/intermediate/blues_me_expanded.rds"
+if (!file.exists(expanded_file)) {
+  stop("Missing blues_me_expanded.rds. Run the expanded-training preparation section of working_script_fixed.R first.")
 }
 
-blues_me_expanded <- dplyr::bind_rows(
-  expanded_blue_list
-)
+blues_me_expanded <- readRDS(expanded_file)
+GRM <- readRDS("results/intermediate/GRM.rds")
 
-# Check expanded multi-environment BLUEs
-
-print(
-  blues_me_expanded %>%
-    dplyr::group_by(TRAIT) %>%
-    dplyr::summarise(
-      N = dplyr::n(),
-      N_GENOTYPES = dplyr::n_distinct(germplasmName),
-      .groups = "drop"
-    )
-)
-
-stopifnot(
-  length(
-    intersect(
-      selected_2026,
-      unique(blues_me_expanded$germplasmName)
-    )
-  ) == 0
-)
-
-saveRDS(
-  blues_me_expanded,
-  "results/intermediate/blues_me_expanded.rds"
-)
+stopifnot(all(c("FullSampleName", "TRAIT", "predicted.value") %in% names(blues_me_expanded)))
 
 # Cross-validation of expanded training population
 
@@ -439,14 +227,17 @@ saveRDS(
   "results/intermediate/cv_predictions_expanded.rds"
 )
 
+
+# Pipeline-stage table folders
+dir.create("results/tables/cross_validation/expanded", recursive=TRUE, showWarnings=FALSE)
 write.csv(
   cv_results_expanded,
-  "results/tables/cv_results_expanded.csv",
+  "results/tables/cross_validation/expanded/cv_results_expanded.csv",
   row.names = FALSE
 )
 
 write.csv(
   cv_summary_expanded,
-  "results/tables/cv_summary_expanded.csv",
+  "results/tables/cross_validation/expanded/cv_summary_expanded.csv",
   row.names = FALSE
 )

@@ -1,0 +1,5 @@
+"population","n_lines","n_SNPs","mean_expected_heterozygosity","mean_observed_heterozygosity","fraction_polymorphic_among_callable_SNPs","missing_fraction"
+"Historical_all",830,17517,0.295261329986615,0.0491327185776846,1,0
+"UIUC_2025_all",240,17517,0.243649096036866,0.046212250956214,0.970143289376035,0
+"Historical_only",802,17517,0.2953614034193,0.0492326869644408,1,0
+"UIUC_2025_only",212,17517,0.242758022959459,0.0462047111108238,0.965918821716047,0

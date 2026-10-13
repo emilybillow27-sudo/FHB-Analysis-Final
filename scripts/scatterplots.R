@@ -7,7 +7,7 @@
 if (!file.exists("data/FHB_Project_Training_Data.csv")) {
   stop("Set the working directory to the FHB Analysis Final project root.")
 }
-for (output_dir in c("results/intermediate", "results/tables", "results/figures")) {
+for (output_dir in c("results/intermediate", "results/tables", "results/figures/forward_prediction/2025")) {
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 }
 
@@ -17,7 +17,10 @@ library(ggplot2)
 library(patchwork)
 
 # Read saved outputs from the main pipeline; no preloaded R objects are required.
-forward_2025 <- read.csv("results/tables/forward_predictions_2025.csv", stringsAsFactors = FALSE)
+forward_2025 <- 
+# Pipeline-stage table folders
+dir.create("results/tables/forward_prediction/2025", recursive=TRUE, showWarnings=FALSE)
+read.csv("results/tables/forward_prediction/2025/forward_predictions_2025.csv", stringsAsFactors = FALSE)
 blues_se_test <- readRDS("results/intermediate/blues_se_test.rds")
 blues_me_train <- readRDS("results/intermediate/blues_me_train.rds")
 traits <- c("INC", "SEV", "DON", "FDK")
@@ -112,7 +115,7 @@ dir.create(
 
 write.csv(
   observed_predicted_2025,
-  "results/tables/observed_predicted_2025.csv",
+  "results/tables/forward_prediction/2025/observed_predicted_2025.csv",
   row.names = FALSE
 )
 
@@ -183,7 +186,7 @@ plot_observed_predicted <- function(dat, trait_name) {
 
 # Create output folder
 dir.create(
-  "results/figures",
+  "results/figures/forward_prediction/2025",
   recursive = TRUE,
   showWarnings = FALSE
 )
@@ -200,7 +203,7 @@ for (trait_name in traits) {
   
   ggplot2::ggsave(
     filename = paste0(
-      "results/figures/observed_vs_predicted_2025_",
+      "results/figures/forward_prediction/2025/observed_vs_predicted_2025_",
       trait_name,
       ".png"
     ),
@@ -222,7 +225,7 @@ print(combined_2025_scatterplots)
 
 # Save the combined figure
 ggplot2::ggsave(
-  "results/figures/observed_vs_predicted_2025_all_traits.png",
+  "results/figures/forward_prediction/2025/observed_vs_predicted_2025_all_traits.png",
   combined_2025_scatterplots,
   width = 14,
   height = 11,

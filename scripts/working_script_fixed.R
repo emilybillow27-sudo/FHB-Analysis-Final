@@ -6,18 +6,18 @@
 # historical, 2025, and 2026 populations and evaluates forward genomic
 # prediction using GBLUP.
 
-# Run from the project root (FHB Analysis Final).
-if (!file.exists("data/FHB_Project_Training_Data.csv")) {
-  stop("Set the working directory to the FHB Analysis Final project root.")
-}
-for (output_dir in c("results/intermediate", "results/tables", "results/figures")) {
-  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-}
-
 library(dplyr)
 library(tidyr)
 library(purrr)
 library(sommer)
+
+dir.create("results/intermediate", recursive = TRUE, showWarnings = FALSE)
+
+# Create the year-specific prediction table folders before exporting.
+for (year in c("2025", "2026")) {
+  dir.create(file.path("results", "tables", "forward_prediction", year),
+             recursive = TRUE, showWarnings = FALSE)
+}
 
 traits <- c("INC", "SEV", "DON", "FDK")
 
@@ -413,11 +413,11 @@ vcf <- gaston::as.matrix(
 
 # Calculate the genomic relationship matrix
 
-grm_inputs <- sommer::A.mat(vcf, return.imputed = TRUE)
-GRM <- grm_inputs$A
-geno_mat <- as.data.frame(grm_inputs$X, check.names = FALSE)
-geno_mat <- tibble::rownames_to_column(geno_mat, "FullSampleName")
-saveRDS(geno_mat, "results/intermediate/geno_mat.rds")
+# Convert genotype dosage to the coding required by A.mat()
+geno_mat <- vcf - 1
+
+# Calculate the additive genomic relationship matrix
+GRM <- sommer::A.mat(geno_mat)
 
 saveRDS(
   GRM,
@@ -483,9 +483,6 @@ blues_me_train <- harmonize_marker_ids(
 blues_se_test <- harmonize_marker_ids(
   blues_se_test
 )
-
-saveRDS(blues_me_train, "results/intermediate/blues_me_train.rds")
-saveRDS(blues_se_test, "results/intermediate/blues_se_test.rds")
 
 # Forward prediction of the 2025 testing population using GBLUP
 
@@ -647,13 +644,13 @@ print(
 
 write.csv(
   forward_2025,
-  "results/tables/forward_predictions_2025.csv",
+  "results/tables/forward_prediction/2025/forward_predictions_2025.csv",
   row.names = FALSE
 )
 
 write.csv(
   forward_2025_accuracy,
-  "results/tables/forward_prediction_2025_accuracy.csv",
+  "results/tables/forward_prediction/2025/forward_prediction_2025_accuracy.csv",
   row.names = FALSE
 )
 
@@ -675,6 +672,42 @@ sdsu_2026_raw <- read.csv(
   "data/FHB_Project_Testing_Data_SDSU_2026.csv",
   fileEncoding = "UTF-8-BOM",
   check.names = FALSE
+)
+
+# Align all source columns and combine the 2026 data before analysis.
+# Keep unavailable measurements as NA; export them as blank CSV cells.
+datasets_2026 <- list(
+  UNL = unl_2026_raw,
+  UIUC = uiuc_2026_raw,
+  SDSU = sdsu_2026_raw
+)
+core_columns_2026 <- c(
+  "YR", "EXPT", "NURNAME", "PLOT", "ID", "PEDIGREE",
+  "CATEGORY", "TYPE", "Incidence", "Severity", "FDK", "DON", "REP"
+)
+columns_2026 <- unique(c(
+  core_columns_2026,
+  unlist(lapply(datasets_2026, names))
+))
+datasets_2026 <- lapply(datasets_2026, function(dat) {
+  for (column in setdiff(columns_2026, names(dat))) {
+    dat[[column]] <- rep(NA, nrow(dat))
+  }
+  dat[columns_2026]
+})
+
+unl_2026_raw <- datasets_2026$UNL
+uiuc_2026_raw <- datasets_2026$UIUC
+sdsu_2026_raw <- datasets_2026$SDSU
+unified_2026 <- dplyr::bind_rows(datasets_2026)
+stopifnot(
+  nrow(unified_2026) == sum(vapply(datasets_2026, nrow, integer(1)))
+)
+write.csv(
+  unified_2026,
+  "data/FHB_Project_Testing_Data_2026.csv",
+  row.names = FALSE,
+  na = ""
 )
 
 # Identify the 60 replicated 2026 validation genotypes
@@ -740,19 +773,25 @@ sdsu_2026 <- standardize_2026(
   "SDSU"
 )
 
-# Identify traits available at each 2026 location
+# Identify traits with observed values at each 2026 location
 
-traits_2026_unl <- traits[
-  traits %in% names(unl_2026)
-]
+traits_2026_unl <- traits[vapply(
+  traits,
+  function(trait) any(!is.na(unl_2026[[trait]])),
+  logical(1)
+)]
 
-traits_2026_uiuc <- traits[
-  traits %in% names(uiuc_2026)
-]
+traits_2026_uiuc <- traits[vapply(
+  traits,
+  function(trait) any(!is.na(uiuc_2026[[trait]])),
+  logical(1)
+)]
 
-traits_2026_sdsu <- traits[
-  traits %in% names(sdsu_2026)
-]
+traits_2026_sdsu <- traits[vapply(
+  traits,
+  function(trait) any(!is.na(sdsu_2026[[trait]])),
+  logical(1)
+)]
 
 print(
   traits_2026_unl
@@ -1349,18 +1388,18 @@ print(
 
 write.csv(
   predictions_2026,
-  "results/tables/forward_predictions_2026.csv",
+  "results/tables/forward_prediction/2026/forward_predictions_2026.csv",
   row.names = FALSE
 )
 
 write.csv(
   results_2026,
-  "results/tables/forward_prediction_2026_accuracy.csv",
+  "results/tables/forward_prediction/2026/forward_prediction_2026_accuracy.csv",
   row.names = FALSE
 )
 
 write.csv(
   results_2026_comparison,
-  "results/tables/forward_prediction_2026_comparison.csv",
+  "results/tables/forward_prediction/2026/forward_prediction_2026_comparison.csv",
   row.names = FALSE
 )

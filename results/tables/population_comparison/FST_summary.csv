@@ -1,0 +1,2 @@
+"comparison","FST","CI_lower","CI_upper","n_historical","n_UIUC_2025","n_SNPs","n_blocks","block_bp","bootstrap_replicates"
+"Historical_only_vs_UIUC_2025_only",0.078351837389416,0.0725856922968308,0.0843583242940662,802,212,17517,1817,5e+06,1000

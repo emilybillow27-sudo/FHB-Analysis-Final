@@ -224,15 +224,18 @@ saveRDS(
 )
 
 # Save prediction ability for each repetition
+
+# Pipeline-stage table folders
+dir.create("results/tables/cross_validation/historical", recursive=TRUE, showWarnings=FALSE)
 write.csv(
   cv_results_hist,
-  "results/tables/historical_cv_results.csv",
+  "results/tables/cross_validation/historical/historical_cv_results.csv",
   row.names = FALSE
 )
 
 # Save trait-level summary
 write.csv(
   cv_summary_hist,
-  "results/tables/historical_cv_summary.csv",
+  "results/tables/cross_validation/historical/historical_cv_summary.csv",
   row.names = FALSE
 )
